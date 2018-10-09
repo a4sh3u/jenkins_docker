@@ -11,12 +11,21 @@ pipeline {
   }
 
   stages {
-    stage('KILL ALL JOBS & QUEUES') {
+    stage('Delete Qs & Kill Jobs') {
       steps {
         script {
+          Jenkins.instance.doQuietDown()
           def pipeline = load 'groovy_scripts/kill.groovy'
           pipeline.removeQueues()
           pipeline.killAllrunnigjobs()
+        }
+      }
+    }
+
+    stage('Restart Jenkins') {
+      steps {
+        script {
+          Jenkins.instance.restart()
         }
       }
     }
