@@ -22,12 +22,11 @@ pipeline {
     stage('Delete Qs & Kill Jobs') {
       steps {
         script {
-          Jenkins.instance.doQuietDown()
           def q = Jenkins.instance.queue
           q.items.each {
               q.cancel(it.task)
           }
-          long time_in_millis = 10
+          long time_in_millis = 10000
           Calendar rightNow = Calendar.getInstance()
           Jenkins.instance.getAllItems(Job.class).findAll { Job job ->
               job.isBuilding()
