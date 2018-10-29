@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
 
-docker rm -fv myjenkins
-docker image rm jenkins/jenkins
+docker rm -fv myjenkins || true
+sudo rm -rf jenkins_home || true
 echo "Cleanup Successful"
