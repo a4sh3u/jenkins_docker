@@ -12,6 +12,10 @@ pipeline {
 
   agent any
 
+  triggers {
+      cron('0 4 * * *')
+  }
+
   options {
     disableConcurrentBuilds()
     timestamps()
@@ -19,6 +23,27 @@ pipeline {
   }
 
   stages {
+    stage('Check User') {
+      steps {
+        script {
+          wrap([$class: 'BuildUser']) {
+            sh 'echo ${BUILD_USER_EMAIL}'
+            if ( ! (
+              BUILD_USER_EMAIL == 'asingh' ||
+              BUILD_USER_EMAIL == null
+            )) {
+              mail body: "${BUILD_USER_EMAIL} tried to restart Jenkins, but failed miserably. You probably want to take some legal action against him/her. So, consult the SMAVA legal team." ,
+              from: 'jenkins2@smava.de',
+              replyTo: 'jenkins2@smava.de',
+              subject: "${BUILD_USER_EMAIL} tried to restart Jenkins",
+              to: 'ashutosh.singh@smava.de,rahul.swaminathan@smava.de,david.constenla-rodriguez@smava.de'
+              error('Aborting the build. This is privileged job and mortals can not execute it. This issue will be reported to the DevOps gods and appropriate divine punishment will be handed to the perpetrator.')
+            }
+          }
+        }
+      }
+    }
+
     stage('Delete Qs & Kill Jobs') {
       steps {
         script {
@@ -26,6 +51,7 @@ pipeline {
           q.items.each {
               q.cancel(it.task)
           }
+          println "ALL Queues Cancelled"
           long time_in_millis = 10000
           Calendar rightNow = Calendar.getInstance()
           Jenkins.instance.getAllItems(Job.class).findAll { Job job ->
@@ -36,6 +62,7 @@ pipeline {
               } ?: []
           }.sum().each { Run item ->
               if(item in WorkflowRun) {
+                  println "Trying to kill ${item}"
                   WorkflowRun run = (WorkflowRun) item
                   run.doKill()
                   StageStepExecution.exit(run)
