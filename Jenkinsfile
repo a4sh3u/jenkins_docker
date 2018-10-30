@@ -13,7 +13,7 @@ pipeline {
   agent any
 
   triggers {
-      cron('0 4 * * *')
+    cron('0 4 * * *')
   }
 
   options {
@@ -27,11 +27,13 @@ pipeline {
       steps {
         script {
           wrap([$class: 'BuildUser']) {
-            sh 'echo ${BUILD_USER_EMAIL}'
-            if ( ! (
-              BUILD_USER_EMAIL == 'asingh' ||
-              BUILD_USER_EMAIL == null
-            )) {
+            // sh "echo \${BUILD_USER_EMAIL}"
+            // ISUSERTIMER = sh(script: "if [[ -z \${BUILD_USER_EMAIL+x} ]]; then echo 0; else echo 1; fi", returnStdout: true).trim()
+            sh "if [ -z \${BUILD_USER_EMAIL+x} ]; then export USER='timer'; else export USER='nottimer';fi; echo \${USER}"
+            sh "printenv"
+            if (
+              env.USER == "timer"
+            ) {
               mail body: "${BUILD_USER_EMAIL} tried to restart Jenkins, but failed miserably. You probably want to take some legal action against him/her. So, consult the SMAVA legal team." ,
               from: 'jenkins2@smava.de',
               replyTo: 'jenkins2@smava.de',
